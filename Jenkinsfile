@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        label 'go-builder'
-    }
+    agent any
     stages {
         stage('Pipeline test') {
             steps {
