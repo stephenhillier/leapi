@@ -1,6 +1,6 @@
 pipeline {
   agent {
-    label 'go-toolset-7-rhel7'
+    label 'name=go-builder'
   }
   stages {
     stage('Unit test') {
