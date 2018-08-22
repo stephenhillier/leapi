@@ -23,6 +23,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
+            echo "${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}"
             openshift.selector("bc", "leapi").startBuild("--wait")
           }
         }
