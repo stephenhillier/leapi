@@ -1,7 +1,5 @@
 pipeline {
-  agent {
-    docker { image 'go-toolset-7-rhel7:latest' }
-  }
+  agent any
   stages {
     stage('Unit test') {
       steps {
