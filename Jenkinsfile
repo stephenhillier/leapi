@@ -3,17 +3,15 @@ pipeline {
     stages {
         stage('Create new build') {
             steps {
-                script {
-                    when {
-                        expression {
-                            openshift.withCluster() {
-                                return !openshift.selector("bc", "leapi").exists();
-                            }
+                when {
+                    expression {
+                        openshift.withCluster() {
+                            return !openshift.selector("bc", "leapi").exists();
                         }
                     }
-                    openshift.withCluster() {
-                        openshift.newApp("go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git")
-                    }
+                }
+                openshift.withCluster() {
+                    openshift.newApp("go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git")
                 }
             }
         }
