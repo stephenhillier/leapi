@@ -64,6 +64,7 @@ pipeline {
               if (it.object().status.phase != 'Pending') {
                   name = it.object().metadata.name
                   echo name
+                  echo openshift.rsh("${name}", "cd \$APP_HOME && pwd && ls").out
                 return true;
               }
             }
