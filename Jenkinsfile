@@ -50,24 +50,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            openshift.newApp("leapi:dev", "--name=leapi-dev", "--wait").narrow("svc").expose()
-          }
-        }
-      }
-    }
-    stage('Unit test') {
-      steps {
-        script {
-          openshift.withCluster() {
-            object = openshift.selector("dc", "leapi-dev")
-            object.related("pods").untilEach(1) {
-              if (it.object().status.phase != 'Pending') {
-                  name = it.object().metadata.name
-                  echo name
-                  echo openshift.rsh("${name}", "cd \$APP_HOME && pwd && ls").out
-                return true;
-              }
-            }
+            openshift.newApp("leapi:dev", "--name=leapi-dev", "--wait").narrow("svc").expose("--port=8000")
           }
         }
       }
