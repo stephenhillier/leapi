@@ -63,7 +63,7 @@ pipeline {
             object.related("pods").untilEach(1) {
               if (it.object().status.phase != 'Pending') {
                   name = it.object().metadata.name
-                  echo openshift.rsh("${name}", "cd \$APP_HOME && pwd && ls && go test").out
+                  echo name
                 return true;
               }
             }
