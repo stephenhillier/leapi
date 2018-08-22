@@ -2,16 +2,16 @@ pipeline {
     agent any
     stages {
         stage('Create new build') {
-            steps {
-                when {
-                    expression {
-                        script {
-                            openshift.withCluster() {
-                                return !openshift.selector("bc", "leapi").exists();
-                            }
+            when {
+                expression {
+                    script {
+                        openshift.withCluster() {
+                            return !openshift.selector("bc", "leapi").exists();
                         }
                     }
                 }
+            }
+            steps {
                 script {
                     openshift.withCluster() {
                         openshift.newApp("go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git")
