@@ -1,6 +1,6 @@
 pipeline {
   agent {
-    label 'name=go-builder'
+    docker { image 'go-toolset-7-rhel7:latest' }
   }
   stages {
     stage('Unit test') {
