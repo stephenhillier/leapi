@@ -19,7 +19,7 @@ pipeline {
         }
       }
     }
-    stage('Build new image') {
+    stage('Test & Build') {
       steps {
         script {
           openshift.withCluster() {
