@@ -42,7 +42,7 @@ pipeline {
                 expression {
                     script {
                         openshift.withCluster() {
-                            !openshift.selector("dc", "leapi-dev")
+                            return !openshift.selector("dc", "leapi-dev").exists()
                         }
                     }
                 }
