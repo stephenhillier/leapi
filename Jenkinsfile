@@ -23,7 +23,7 @@ pipeline {
             steps {
                 script {
                     openshift.withCluster() {
-                        openshift.selector("bc", "leapi").newBuild()
+                        openshift.selector("bc", "leapi").startBuild()
                     }
                 }
             }
