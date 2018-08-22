@@ -5,13 +5,17 @@ pipeline {
             steps {
                 when {
                     expression {
-                        openshift.withCluster() {
-                            return !openshift.selector("bc", "leapi").exists();
+                        script {
+                            openshift.withCluster() {
+                                return !openshift.selector("bc", "leapi").exists();
+                            }
                         }
                     }
                 }
-                openshift.withCluster() {
-                    openshift.newApp("go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git")
+                script {
+                    openshift.withCluster() {
+                        openshift.newApp("go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git")
+                    }                   
                 }
             }
         }
