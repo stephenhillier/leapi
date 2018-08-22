@@ -1,11 +1,6 @@
 pipeline {
   agent any
   stages {
-    stage('Unit test') {
-      steps {
-        sh "cd ${APP_HOME} && go test"
-      }
-    }
     stage('Create new build') {
       when {
         expression {
