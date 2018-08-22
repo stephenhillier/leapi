@@ -56,14 +56,16 @@ pipeline {
       }
     }
     stage('Unit test') {
-      script {
-        openshift.withCluster() {
-          object = openshift.selector("dc", "leapi-dev")
-          object.related("pods").untilEach(1) {
-            if (it.object().status.phase != 'Pending') {
-                name = it.object().metadata.name
-                echo openshift.rsh("${name}", "cd ${APP_HOME} && go test").out
-              return true;
+      steps {
+        script {
+          openshift.withCluster() {
+            object = openshift.selector("dc", "leapi-dev")
+            object.related("pods").untilEach(1) {
+              if (it.object().status.phase != 'Pending') {
+                  name = it.object().metadata.name
+                  echo openshift.rsh("${name}", "cd ${APP_HOME} && go test").out
+                return true;
+              }
             }
           }
         }
