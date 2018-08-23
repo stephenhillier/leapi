@@ -2,8 +2,10 @@ pipeline {
   agent any
   stages {
     stage('Start pipeline') {
-      script {
-        abortAllPreviousBuildInProgress(currentBuild)
+      steps {
+        script {
+          abortAllPreviousBuildInProgress(currentBuild)
+        }
       }
     }
     stage('Create new build') {
