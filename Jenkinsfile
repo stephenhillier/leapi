@@ -14,7 +14,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            openshift.newBuild("go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git")
+            openshift.newBuild("registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git")
           }                   
         }
       }
