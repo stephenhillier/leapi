@@ -1,6 +1,8 @@
 #!/bin/bash
 echo "Before assembling"
 
+cd /tmp/src/ && ls
+
 /usr/libexec/s2i/assemble
 rc=$?
 
