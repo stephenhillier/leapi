@@ -19,7 +19,7 @@ pipeline {
         }
       }
     }
-    stage('Test & Build') {
+    stage('Test & build image') {
       steps {
         script {
           openshift.withCluster() {
@@ -38,7 +38,7 @@ pipeline {
         }
       }
     }
-    stage('Create dev') {
+    stage('Create new dev deployment') {
       when {
         expression {
           script {
