@@ -9,7 +9,7 @@ if [ $rc -eq 0 ]; then
     echo "After successful assembling"
     echo $IMPORT_URL
     printenv
-    cd $HOME/go/src/$IMPORT_URL && go test -v && cd $HOME
+    cd /opt/rh/go-toolset-7/root/usr/share/gocode && ls && cd github.com/stephenhillier/leapi && go test -v && cd $HOME
 else
     echo "After failed assembling"
 fi
