@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Before assembling"
 
-cd /tmp/src/ && ls
+cd /tmp/src/ && go test -v
 
 /usr/libexec/s2i/assemble
 rc=$?
@@ -9,9 +9,6 @@ rc=$?
 
 if [ $rc -eq 0 ]; then
     echo "After successful assembling"
-    echo $IMPORT_URL
-    printenv
-    cd /opt/rh/go-toolset-7/root/usr/share/gocode/src && ls && cd github.com && ls && cd stephenhillier && ls && cd leapi && go test -v && cd $HOME
 else
     echo "After failed assembling"
 fi
