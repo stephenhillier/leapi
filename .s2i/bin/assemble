@@ -4,10 +4,10 @@ echo "Before assembling"
 /usr/libexec/s2i/assemble
 rc=$?
 
-go test -v
 
 if [ $rc -eq 0 ]; then
     echo "After successful assembling"
+    pwd && ls && cd github.com/stephenhillier/leapi && go test -v && cd $APP_HOME
 else
     echo "After failed assembling"
 fi
