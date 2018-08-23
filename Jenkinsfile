@@ -51,7 +51,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            openshift.newApp("leapi:dev", "--name=leapi-dev", "--wait").narrow("svc").expose("--port=8000")
+            openshift.newApp("leapi:dev", "--name=leapi-dev").narrow("svc").expose("--port=8000")
           }
         }
       }
