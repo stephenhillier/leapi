@@ -4,7 +4,7 @@ echo "Before assembling"
 /usr/libexec/s2i/assemble
 rc=$?
 
-go test
+go test -v
 
 if [ $rc -eq 0 ]; then
     echo "After successful assembling"
