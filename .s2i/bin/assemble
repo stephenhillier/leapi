@@ -1,13 +1,15 @@
 #!/bin/bash
 echo "Before assembling"
 
+ls && pwd && go test -v
+
 /usr/libexec/s2i/assemble
 rc=$?
 
 
 if [ $rc -eq 0 ]; then
     echo "After successful assembling"
-    pwd && ls && cd $APP_HOME/go/src/$IMPORT_URL && go test -v && cd $APP_HOME
+    pwd && ls && cd /opt/app-root/src/go/src/$IMPORT_URL && go test -v && cd $APP_HOME
 else
     echo "After failed assembling"
 fi
