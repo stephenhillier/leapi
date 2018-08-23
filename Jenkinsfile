@@ -1,12 +1,17 @@
 pipeline {
   agent any
   stages {
+    stage('Start pipeline') {
+      script {
+        abortAllPreviousBuildInProgress(currentBuild)
+      }
+    }
     stage('Create new build') {
       when {
         expression {
           script {
             openshift.withCluster() {
-              return !openshift.selector("bc", "leapi").exists();
+              return !openshift.selector("bc", "leapi-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}").exists();
             }
           }
         }
@@ -14,7 +19,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            openshift.newBuild("registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git")
+            openshift.newBuild("registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git", "--ref=${env.CHANGE_ID}")
           }                   
         }
       }
@@ -24,7 +29,7 @@ pipeline {
         script {
           openshift.withCluster() {
             echo "${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}"
-            openshift.selector("bc", "leapi").startBuild("--wait")
+            openshift.selector("bc", "leapi-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}").startBuild("--wait")
           }
         }
       }
@@ -33,7 +38,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            openshift.tag("leapi:latest", "leapi:dev")
+            openshift.tag("leapi-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}:latest", "leapi:dev")
           }
         }
       }
@@ -43,7 +48,7 @@ pipeline {
         expression {
           script {
             openshift.withCluster() {
-              return !openshift.selector("dc", "leapi-dev").exists()
+              return !openshift.selector("dc", "leapi-dev-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}").exists()
             }
           }
         }
@@ -51,7 +56,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            openshift.newApp("leapi:dev", "--name=leapi-dev").narrow("svc").expose("--port=8000")
+            openshift.newApp("leapi:dev", "--name=leapi-dev-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}").narrow("svc").expose("--port=8000")
           }
         }
       }

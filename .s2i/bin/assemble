@@ -1,7 +1,9 @@
 #!/bin/bash
 echo "Before assembling"
 
-cd /tmp/src/ && go test -v
+pushd /tmp/src
+go test -v
+popd
 
 /usr/libexec/s2i/assemble
 rc=$?
