@@ -22,7 +22,7 @@ pipeline {
         script {
           openshift.withCluster() {
             checkout scm
-            openshift.newBuild("--from-image=registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest", ".", "--name=leapi-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}")
+            openshift.newBuild("-i=registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest", ".", "--name=leapi-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}")
           }                   
         }
       }
