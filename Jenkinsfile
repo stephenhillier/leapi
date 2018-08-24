@@ -27,6 +27,7 @@ pipeline {
 
             // create a new build config if one does not already exist
             if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
+              echo "Creating a new build config for pull request ${PR_NUM}"
               openshift.newBuild("--docker-image=registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest", ".", "--name=leapi-${PR_NUM}")
             }
 
@@ -51,7 +52,8 @@ pipeline {
 
             // if a deployment config does not exist for this pull request, create one
             if ( !openshift.selector("dc", "leapi-dev-${PR_NUM}").exists() ) {
-              openshift.newApp("leapi-${PR_NUM}:dev", "--name=leapi-dev-${PR_NUM}").narrow("dc").expose("--port=8000").expose()
+              echo "Creating a new deployment config for pull request ${PR_NUM}"
+              openshift.newApp("leapi-${PR_NUM}:dev", "--name=leapi-dev-${PR_NUM}").narrow("dc").expose("--port=8000")
             }
 
             echo "Waiting for deployment to dev..."
