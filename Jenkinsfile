@@ -1,5 +1,6 @@
+def buildVersion = "${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}"
+
 pipeline {
-  def buildVersion = "${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}"
   agent any
   stages {
     stage('Start pipeline') {
