@@ -13,28 +13,6 @@ pipeline {
       }
     }
 
-    // create a new build config only if one does not already exist for this pull request.
-    // todo: may be able to share build configs across pull requests
-    stage('Create new build') {
-      when {
-        expression {
-          script {
-            openshift.withCluster() {
-              return !openshift.selector("bc", "leapi-${PR_NUM}").exists();
-            }
-          }
-        }
-      }
-      steps {
-        script {
-          openshift.withCluster() {
-            checkout scm
-            openshift.newBuild("--docker-image=registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest", ".", "--name=leapi-${PR_NUM}")
-          }                   
-        }
-      }
-    }
-
     // start a new build for this pull request.
     // unit tests are run inside the s2i builder image (unit test dependencies
     // will not be available in the final application image).  See .s2i/bin/assemble
@@ -45,55 +23,47 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
+            checkout scm
+
+            // create a new build config if one does not already exist
+            if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
+              echo "Creating a new build config for pull request ${PR_NUM}"
+              openshift.newBuild("--docker-image=registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest", ".", "--name=leapi-${PR_NUM}")
+            }
+
             echo "Starting build from pull request ${PR_NUM}"
             openshift.selector("bc", "leapi-${PR_NUM}").startBuild("--wait")
-          }
-        }
-      }
-    }
 
-    // upon successful build, tag the image `dev`.
-    // the dev deployment will automatically run as soon as a new dev image is ready.
-    stage('Promote to dev') {
-      steps {
-        script {
-          openshift.withCluster() {
+            // the dev deployment will automatically run as soon as a new image is tagged as `dev`
+            echo "Successfully built image: tagging as new dev image"
             openshift.tag("leapi-${PR_NUM}:latest", "leapi-${PR_NUM}:dev")
+
           }
         }
       }
     }
 
-    // create a new deployment for dev.
-    // this stage is skipped if a deployment config already exists for this pull request
-    // otherwise, a new app will be created using the built image
-    stage('Create new dev deployment') {
-      when {
-        expression {
-          script {
-            openshift.withCluster() {
-              return !openshift.selector("dc", "leapi-dev-${PR_NUM}").exists()
+    // Deployment to dev happens automatically when a new image is tagged `dev`.
+    // This stage monitors the newest deployment for pods/containers to report back as ready.
+    stage('Deploy to dev') {
+      steps {
+        script {
+          openshift.withCluster() {
+
+            // if a deployment config does not exist for this pull request, create one
+            if ( !openshift.selector("dc", "leapi-dev-${PR_NUM}").exists() ) {
+              echo "Creating a new deployment config for pull request ${PR_NUM}"
+              openshift.newApp("leapi-${PR_NUM}:dev", "--name=leapi-dev-${PR_NUM}").narrow("dc").expose("--port=8000")
             }
-          }
-        }
-      }
-      steps {
-        script {
-          openshift.withCluster() {
-            openshift.newApp("leapi-${PR_NUM}:dev", "--name=leapi-dev-${PR_NUM}").narrow("svc").expose("--port=8000")
-          }
-        }
-      }
-    }
-    stage('Verify deployment') {
-      steps {
-        script {
-          openshift.withCluster() {
+
             echo "Waiting for deployment to dev..."
-            def dc = openshift.selector("dc", "leapi-dev-${PR_NUM}")
+            def newVersion = openshift.selector("dc", "leapi-dev-${PR_NUM}").object().status.latestVersion
+
+            // find the pods for the newest deployment
+            def pods = openshift.selector('pod', [deployment: "leapi-dev-${PR_NUM}-${newVersion}"])
 
             // wait until each container in this deployment's pod reports as ready
-            dc.related("pods").untilEach(1) {
+            pods.untilEach(1) {
               return it.object().status.containerStatuses.every {
                 it.ready
               }
