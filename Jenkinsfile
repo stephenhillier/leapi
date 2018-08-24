@@ -13,7 +13,7 @@ pipeline {
         expression {
           script {
             openshift.withCluster() {
-              return !openshift.selector("bc", "leapi-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}").exists();
+              return !openshift.selector("bc", "leapi-${env.JOB_BASE_NAME}".toLowerCase()).exists();
             }
           }
         }
@@ -22,7 +22,7 @@ pipeline {
         script {
           openshift.withCluster() {
             checkout scm
-            openshift.newBuild("--docker-image=registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest", ".", "--name=leapi-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}")
+            openshift.newBuild("--docker-image=registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest", ".", "--name=leapi-${env.JOB_BASE_NAME}".toLowerCase())
           }                   
         }
       }
@@ -31,8 +31,8 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            echo "${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}"
-            openshift.selector("bc", "leapi-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}").startBuild("--wait")
+            echo "${env.JOB_BASE_NAME}".toLowerCase()
+            openshift.selector("bc", "leapi-${env.JOB_BASE_NAME}".toLowerCase()).startBuild("--wait")
           }
         }
       }
@@ -41,7 +41,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            openshift.tag("leapi-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}:latest", "leapi:dev")
+            openshift.tag("leapi-${env.JOB_BASE_NAME}:latest", "leapi:dev")
           }
         }
       }
@@ -51,7 +51,7 @@ pipeline {
         expression {
           script {
             openshift.withCluster() {
-              return !openshift.selector("dc", "leapi-dev-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}").exists()
+              return !openshift.selector("dc", "leapi-dev-${env.JOB_BASE_NAME}".toLowerCase()).exists()
             }
           }
         }
@@ -59,7 +59,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            openshift.newApp("leapi:dev", "--name=leapi-dev-${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}-${env.CHANGE_ID}").narrow("svc").expose("--port=8000")
+            openshift.newApp("leapi:dev", "--name=leapi-dev-${env.JOB_BASE_NAME}".toLowerCase()).narrow("svc").expose("--port=8000")
           }
         }
       }
