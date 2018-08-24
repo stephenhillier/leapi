@@ -41,7 +41,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            openshift.tag("leapi-${env.JOB_BASE_NAME}:latest", "leapi:dev")
+            openshift.tag("leapi-${env.JOB_BASE_NAME}:latest".toLowerCase(), "leapi-${env.JOB_BASE_NAME}:dev".toLowerCase())
           }
         }
       }
@@ -59,7 +59,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            openshift.newApp("leapi:dev", "--name=leapi-dev-${env.JOB_BASE_NAME}".toLowerCase()).narrow("svc").expose("--port=8000")
+            openshift.newApp("leapi-${env.JOB_BASE_NAME}:dev".toLowerCase(), "--name=leapi-dev-${env.JOB_BASE_NAME}".toLowerCase()).narrow("svc").expose("--port=8000")
           }
         }
       }
