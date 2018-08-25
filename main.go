@@ -1,46 +1,56 @@
 package main
 
 import (
-	"context"
+	"flag"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
 )
 
+// Server represents the server environment (router and database)
 type Server struct {
+	DB   *DB
+	http *http.Server
 }
 
 func main() {
-	// define the port that the server will run on
-	port := 8000
 
-	// add a channel that accepts an interrupt signal
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt)
+	// get flag values
+	var port int
+	var dbhost string
+	var dbuser string
+	var dbpass string
+	var dbname string
 
-	server := http.Server{Addr: fmt.Sprintf(":%v", port), Handler: nil}
+	flag.IntVar(&port, "port", 8000, "the port to listen for http connections on")
+	flag.StringVar(&dbhost, "db-host", "localhost", "database hostname (default: localhost)")
+	flag.StringVar(&dbuser, "db-user", "", "database username")
+	flag.StringVar(&dbpass, "db-pass", "", "database user password")
+	flag.StringVar(&dbname, "db-name", "", "database name")
+	flag.Parse()
 
-	// start server and continue
-	go func() {
-		log.Printf("Starting HTTP server on port %v.", port)
-		log.Println("Press CTRL+C to stop.")
-		http.HandleFunc("/health", health)
-		log.Fatal(server.ListenAndServe())
-	}()
+	// wait for database connection (see database.go)
+	db, err := waitForDB(fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", dbuser, dbpass, dbhost, dbname))
+	if err != nil {
+		log.Panic("Database connection error:", err)
+	}
 
-	// wait for interrupt signal
-	<-stop
+	// create a pointer to a new http server on specified port
+	httpServer := &http.Server{Addr: fmt.Sprintf(":%v", port), Handler: nil}
 
-	// interrupt signal received- shut down http server.
-	log.Println("Stopping server.")
-	server.Shutdown(context.Background())
+	api := &Server{db, httpServer}
 
+	// start http server
+	log.Printf("Starting HTTP server on port %v.", port)
+	log.Println("Press CTRL+C to stop.")
+	http.HandleFunc("/health", api.health)
+	log.Fatal(httpServer.ListenAndServe())
 }
 
-func health(w http.ResponseWriter, req *http.Request) {
+// health is a simple handler that returns 200 OK status and text "OK"
+// it can be used for readiness/health checks
+func (*Server) health(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "GET" {
 		w.Header().Set("Allow", "GET")
 		http.Error(w, http.StatusText(405), 405)
