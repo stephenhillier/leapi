@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"time"
 )
 
 type Server struct {
@@ -17,29 +17,27 @@ func main() {
 	// define the port that the server will run on
 	port := 8000
 
-	// set up a channel that accepts an interrupt signal
+	// add a channel that accepts an interrupt signal
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 
-	s := http.Server{Addr: ":8000", Handler: nil}
+	server := http.Server{Addr: fmt.Sprintf(":%v", port), Handler: nil}
 
 	// start server and continue
 	go func() {
 		log.Printf("Starting HTTP server on port %v.", port)
 		log.Println("Press CTRL+C to stop.")
 		http.HandleFunc("/health", health)
-		log.Fatal(s.ListenAndServe())
+		log.Fatal(server.ListenAndServe())
 	}()
 
-	// server is running, now wait for an interrupt signal
+	// wait for interrupt signal
 	<-stop
 
-	// interrupt signal received: stop server.
-	log.Println("Stopping server...")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	s.Shutdown(ctx)
-	log.Println("Server shutdown. Come again soon!")
+	// interrupt signal received- shut down http server.
+	log.Println("Stopping server.")
+	server.Shutdown(context.Background())
+
 }
 
 func health(w http.ResponseWriter, req *http.Request) {
