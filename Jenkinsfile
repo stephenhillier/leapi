@@ -34,6 +34,12 @@ pipeline {
               openshift.selector("bc", "leapi-${PR_NUM}").startBuild("--wait")
             }
 
+            def builds = openshift.selector("bc", "leapi-${PR_NUM}").related("builds")
+
+            builds.untilEach {
+              return it.object().status.phase == "Complete"
+            }
+
             // the dev deployment will automatically run as soon as a new image is tagged as `dev`
             echo "Successfully built image: tagging as new dev image"
             openshift.tag("leapi-${PR_NUM}:latest", "leapi-${PR_NUM}:dev")

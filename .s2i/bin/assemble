@@ -4,8 +4,6 @@ set -e
 
 pushd /tmp/src
 
-pwd && ls && go test -v
-
 if [[ `go list -f {{.Incomplete}}` == "true" ]]; then
 
     INSTALL_URL=${INSTALL_URL:-$IMPORT_URL}
@@ -48,6 +46,7 @@ if [[ `go list -f {{.Incomplete}}` == "true" ]]; then
 
         pushd $GOPATH/src/$INSTALL_URL
 
+        pwd && ls && go test -v
         echo "Building"
 
         go install -i $INSTALL_URL
