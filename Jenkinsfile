@@ -23,12 +23,18 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            checkout scm
-
             // create a new build config if one does not already exist
-            if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
+            if ( !openshift.selector("bc", "leapi-${PR_NUM}-builder").exists() ) {
               echo "Creating a new build config for pull request ${PR_NUM}"
-              openshift.newBuild("--docker-image=registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest", ".", "--name=leapi-${PR_NUM}")
+              openshift.newBuild("https://github.com/stephenhillier/leapi.git#pull/${env.CHANGE_ID}/head", "--strategy=docker", "--name=leapi-${PR_NUM}-builder")
+            }
+
+            if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
+              openshift.newBuild("alpine:3.8", "--source-image=leapi-${PR_NUM}-builder", "--name=leapi-${PR_NUM}", "--source-image-path=/go/bin/leapi:.", """--dockerfile='FROM alpine:3.8
+              RUN mkdir -p /app
+              COPY leapi /app/leapi
+              ENTRYPOINT [\"/app/leapi\"]
+              '""")
             } else {
               echo "Starting build from pull request ${PR_NUM}"
               openshift.selector("bc", "leapi-${PR_NUM}").startBuild("--wait")
@@ -36,8 +42,10 @@ pipeline {
 
             def builds = openshift.selector("bc", "leapi-${PR_NUM}").related("builds")
 
-            builds.untilEach {
-              return it.object().status.phase == "Complete"
+            timeout(10) {
+              builds.untilEach {
+                return it.object().status.phase == "Complete"
+              }
             }
 
             // the dev deployment will automatically run as soon as a new image is tagged as `dev`
@@ -69,12 +77,14 @@ pipeline {
             def pods = openshift.selector('pod', [deployment: "leapi-dev-${PR_NUM}-${newVersion}"])
 
             // wait until each container in this deployment's pod reports as ready
-            pods.untilEach(1) {
-              return it.object().status.containerStatuses.every {
-                it.ready
+            timeout(10) {
+              pods.untilEach(1) {
+                return it.object().status.containerStatuses.every {
+                  it.ready
+                }
               }
+              echo "Deployment successful!"
             }
-            echo "Deployment successful!"
           }
         }
       }
