@@ -26,7 +26,12 @@ pipeline {
             // create a new build config if one does not already exist
             if ( !openshift.selector("bc", "leapi-${PR_NUM}-builder").exists() ) {
               echo "Creating a new build config for pull request ${PR_NUM}"
-              openshift.newBuild("https://github.com/stephenhillier/leapi.git#pull/${env.CHANGE_ID}/head", "--strategy=docker", "--name=leapi-${PR_NUM}-builder")
+              def builderImageConfig = openshift.newBuild("https://github.com/stephenhillier/leapi.git#pull/${env.CHANGE_ID}/head", "--strategy=docker", "--name=leapi-${PR_NUM}-builder")
+              timeout(10) {
+                builderImageConfig.related("builds").untilEach {
+                  return it.object().status.phase == "Complete"
+                }
+              }
             }
 
             if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
