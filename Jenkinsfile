@@ -14,8 +14,6 @@ pipeline {
     }
 
     // start a new build for this pull request.
-    // unit tests are run inside the s2i builder image (unit test dependencies
-    // will not be available in the final application image).  See .s2i/bin/assemble
     // 
     // todo: output unit tests to jenkins output. Currently they will fail the pipeline run
     // but without any output.
@@ -24,31 +22,40 @@ pipeline {
         script {
           openshift.withCluster() {
             // create a new build config if one does not already exist
+            // unit tests are run during build (application will not be built if unit tests fail)
             if ( !openshift.selector("bc", "leapi-${PR_NUM}-builder").exists() ) {
               echo "Creating a new build config for pull request ${PR_NUM}"
-              def builderImageConfig = openshift.newBuild("https://github.com/stephenhillier/leapi.git#pull/${env.CHANGE_ID}/head", "--strategy=docker", "--name=leapi-${PR_NUM}-builder")
-              timeout(10) {
-                builderImageConfig.related("builds").untilEach {
-                  return it.object().status.phase == "Complete"
-                }
+              openshift.newBuild("https://github.com/stephenhillier/leapi.git#pull/${env.CHANGE_ID}/head", "--strategy=docker", "--name=leapi-${PR_NUM}-builder")
+            } else {
+              echo "Starting build from pull request ${PR_NUM}"
+              openshift.selector("bc", "leapi-${PR_NUM}-builder").startBuild("--wait")
+            }
+
+            def sourceBuilds = openshift.selector("bc", "leapi-${PR_NUM}-builder").related('builds')
+            timeout(10) {
+              sourceBuilds.untilEach {
+                return it.object().status.phase == "Complete"
               }
             }
 
+            // start building an application image.
+            // this is a chained build; only the application binary will be brought forward from the builder image.
+            // the image can only be used as an executable
             if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
+              echo "Creating new application build config"
               openshift.newBuild("alpine:3.8", "--source-image=leapi-${PR_NUM}-builder", "--allow-missing-imagestream-tags", "--name=leapi-${PR_NUM}", "--source-image-path=/go/bin/leapi:.", """--dockerfile='FROM alpine:3.8
               RUN mkdir -p /app
               COPY leapi /app/leapi
               ENTRYPOINT [\"/app/leapi\"]
               '""")
             } else {
-              echo "Starting build from pull request ${PR_NUM}"
+              echo "Creating application image"
               openshift.selector("bc", "leapi-${PR_NUM}").startBuild("--wait")
             }
 
-            def builds = openshift.selector("bc", "leapi-${PR_NUM}").related("builds")
-
+            def appBuilds = openshift.selector("bc", "leapi-${PR_NUM}").related("builds")
             timeout(10) {
-              builds.untilEach {
+              appBuilds.untilEach {
                 return it.object().status.phase == "Complete"
               }
             }
