@@ -6,9 +6,9 @@ pushd /tmp/src
 
 if [[ `go list -f {{.Incomplete}}` == "true" ]]; then
 
-    INSTALL_URL=${INSTALL_URL:-$IMPORT_URL}
+    INSTALL_URL=${INSTALL_URL:-$REPO_URL}
 
-    if [[ ! -z "$IMPORT_URL" ]]; then
+    if [[ ! -z "$REPO_URL" ]]; then
 
         popd
 
@@ -16,9 +16,9 @@ if [[ `go list -f {{.Incomplete}}` == "true" ]]; then
 
         export GOPATH=`realpath $HOME/go`
 
-        mkdir -p $GOPATH/src/$IMPORT_URL
+        mkdir -p $GOPATH/src/$REPO_URL
 
-        mv /tmp/src/* $GOPATH/src/$IMPORT_URL
+        mv /tmp/src/* $GOPATH/src/$REPO_URL
 
         if [[ -d /tmp/artifacts/pkg ]]; then
 
