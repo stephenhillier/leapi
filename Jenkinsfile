@@ -31,9 +31,11 @@ pipeline {
               openshift.selector("bc", "leapi-${PR_NUM}-builder").startBuild("--wait")
             }
 
-            def sourceBuilds = openshift.selector("bc", "leapi-${PR_NUM}-builder").related('builds')
+            echo "Waiting for builds from buildconfig leapi-${PR_NUM}-builder to finish"
+            def lastBuildNumber = openshift.selector("bc", "leapi-${PR_NUM}-builder").object().status.lastVersion
+            def lastBuild = openshift.selector("build", "leapi-${PR_NUM}-builder-${lastBuildNumber}")
             timeout(10) {
-              sourceBuilds.untilEach {
+              lastBuild.untilEach(1) {
                 return it.object().status.phase == "Complete"
               }
             }
@@ -53,9 +55,11 @@ pipeline {
               openshift.selector("bc", "leapi-${PR_NUM}").startBuild("--wait")
             }
 
-            def appBuilds = openshift.selector("bc", "leapi-${PR_NUM}").related("builds")
+            echo "Waiting for application build from leapi-${PR_NUM} to finish"
+            def lastAppBuildNumber = openshift.selector("bc", "leapi-${PR_NUM}").object().status.lastVersion
+            def lastAppBuild = openshift.selector("build", "leapi-${PR_NUM}-${lastAppBuildNumber}")
             timeout(10) {
-              appBuilds.untilEach {
+              lastAppBuild.untilEach(1) {
                 return it.object().status.phase == "Complete"
               }
             }
