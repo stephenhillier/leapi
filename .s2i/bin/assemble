@@ -2,7 +2,7 @@
 echo "Before assembling"
 
 pushd /tmp/src
-go test -v
+pwd && ls && go test -v
 popd
 
 /usr/libexec/s2i/assemble
