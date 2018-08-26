@@ -26,7 +26,7 @@ pipeline {
             // create a new build config if one does not already exist
             if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
               echo "Creating a new build config for pull request ${PR_NUM}"
-              openshift.newBuild("registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git#pull/${PR_NUM}/head", "--name=leapi-${PR_NUM}")
+              openshift.newBuild("registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git#pull/${PR_NUM}/head", "--name=leapi-${PR_NUM}" "-e IMPORT_URL=https://github.com/stephenhillier/leapi")
             } else {
               echo "Starting build from pull request ${PR_NUM}"
               openshift.selector("bc", "leapi-${PR_NUM}").startBuild("--wait")
