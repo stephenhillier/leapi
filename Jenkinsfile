@@ -24,10 +24,13 @@ pipeline {
         script {
           openshift.withCluster() {
             // create a new build config if one does not already exist
-            if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
+            if ( !openshift.selector("bc", "leapi-${PR_NUM}-builder").exists() ) {
               echo "Creating a new build config for pull request ${PR_NUM}"
               openshift.newBuild("https://github.com/stephenhillier/leapi.git#pull/${env.CHANGE_ID}/head", "--strategy=docker", "--name=leapi-${PR_NUM}-builder", "--to=${env.BUILD_NUMBER}")
-              openshift.newBuild("alpine:3.8", "--source-image=leapi-${PR_NUM}-builder:${env.BUILD_NUMBER}", "--source-image-path=/go/bin/leapi:/leapi", """--dockerfile='FROM alpine:3.8
+            }
+
+            if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
+              openshift.newBuild("alpine:3.8", "--source-image=leapi-${PR_NUM}-builder:${env.BUILD_NUMBER}", "--name=leapi-${PR_NUM}", "--source-image-path=/go/bin/leapi:/leapi", """--dockerfile='FROM alpine:3.8
               RUN mkdir -p /app
               COPY leapi /app/leapi
               ENTRYPOINT [\"/app/leapi\"]
