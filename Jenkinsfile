@@ -40,7 +40,7 @@ pipeline {
               openshift.selector("bc", "leapi-${PR_NUM}").startBuild("--wait")
             }
 
-            def builds = openshift.selector("bc", "leapi-${PR_NUM}").related("builds").objects()
+            def builds = openshift.selector("bc", "leapi-${PR_NUM}").related("builds")
 
             builds.untilEach {
               return it.object().status.phase == "Complete"
