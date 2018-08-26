@@ -1,2 +1,2 @@
 # leapi
-A simple HTTP API that can be deployed to OpenShift
+A simple HTTP API that can be deployed to a cloud service
