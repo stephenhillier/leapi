@@ -30,7 +30,7 @@ pipeline {
             }
 
             if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
-              openshift.newBuild("alpine:3.8", "--source-image=leapi-${PR_NUM}-builder:latest", "--name=leapi-${PR_NUM}", "--source-image-path=/go/bin/leapi:/leapi", """--dockerfile='FROM alpine:3.8
+              openshift.newBuild("alpine:3.8", "--source-image=leapi-${PR_NUM}-builder", "--name=leapi-${PR_NUM}", "--source-image-path=/go/bin/leapi:/leapi", """--dockerfile='FROM alpine:3.8
               RUN mkdir -p /app
               COPY leapi /app/leapi
               ENTRYPOINT [\"/app/leapi\"]
