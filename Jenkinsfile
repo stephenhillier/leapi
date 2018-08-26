@@ -23,18 +23,16 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            checkout scm
-
             // create a new build config if one does not already exist
             if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
               echo "Creating a new build config for pull request ${PR_NUM}"
-              openshift.newBuild("--docker-image=registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest", ".", "--name=leapi-${PR_NUM}")
+              openshift.newBuild("registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest~https://github.com/stephenhillier/leapi.git#pull/${PR_NUM}/head", "--name=leapi-${PR_NUM}")
             } else {
               echo "Starting build from pull request ${PR_NUM}"
               openshift.selector("bc", "leapi-${PR_NUM}").startBuild("--wait")
             }
 
-            def builds = openshift.selector("bc", "leapi-${PR_NUM}").related("builds")
+            def builds = openshift.selector("bc", "leapi-${PR_NUM}").related("builds").objects()
 
             builds.untilEach {
               return it.object().status.phase == "Complete"
