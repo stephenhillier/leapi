@@ -31,15 +31,15 @@ func main() {
 	flag.Parse()
 
 	// wait for database connection (see database.go)
-	db, err := waitForDB(fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", dbuser, dbpass, dbhost, dbname))
-	if err != nil {
-		log.Panic("Database connection error:", err)
-	}
+	// db, err := waitForDB(fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", dbuser, dbpass, dbhost, dbname))
+	// if err != nil {
+	// 	log.Panic("Database connection error:", err)
+	// }
 
 	// create a pointer to a new http server on specified port
 	httpServer := &http.Server{Addr: fmt.Sprintf(":%v", port), Handler: nil}
 
-	api := &Server{db, httpServer}
+	api := &Server{nil, httpServer}
 
 	// start http server
 	log.Printf("Starting HTTP server on port %v.", port)

@@ -42,8 +42,10 @@ pipeline {
 
             def builds = openshift.selector("bc", "leapi-${PR_NUM}").related("builds")
 
-            builds.untilEach {
-              return it.object().status.phase == "Complete"
+            timeout(10) {
+              builds.untilEach {
+                return it.object().status.phase == "Complete"
+              }
             }
 
             // the dev deployment will automatically run as soon as a new image is tagged as `dev`
@@ -75,12 +77,14 @@ pipeline {
             def pods = openshift.selector('pod', [deployment: "leapi-dev-${PR_NUM}-${newVersion}"])
 
             // wait until each container in this deployment's pod reports as ready
-            pods.untilEach(1) {
-              return it.object().status.containerStatuses.every {
-                it.ready
+            timeout(10) {
+              pods.untilEach(1) {
+                return it.object().status.containerStatuses.every {
+                  it.ready
+                }
               }
+              echo "Deployment successful!"
             }
-            echo "Deployment successful!"
           }
         }
       }
