@@ -29,10 +29,10 @@ pipeline {
             if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
               echo "Creating a new build config for pull request ${PR_NUM}"
               openshift.newBuild("--docker-image=registry.access.redhat.com/devtools/go-toolset-7-rhel7:latest", ".", "--name=leapi-${PR_NUM}")
+            } else {
+              echo "Starting build from pull request ${PR_NUM}"
+              openshift.selector("bc", "leapi-${PR_NUM}").startBuild("--wait")
             }
-
-            echo "Starting build from pull request ${PR_NUM}"
-            openshift.selector("bc", "leapi-${PR_NUM}").startBuild("--wait")
 
             // the dev deployment will automatically run as soon as a new image is tagged as `dev`
             echo "Successfully built image: tagging as new dev image"
