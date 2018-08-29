@@ -25,7 +25,7 @@ pipeline {
             // unit tests are run during build (application will not be built if unit tests fail)
             if ( !openshift.selector("bc", "leapi-${PR_NUM}-builder").exists() ) {
               echo "Creating a new build config for pull request ${PR_NUM}"
-              openshift.newBuild("https://github.com/stephenhillier/leapi.git#pull/${env.CHANGE_ID}/head", "--strategy=docker", "--name=leapi-${PR_NUM}-builder")
+              openshift.newBuild("https://github.com/stephenhillier/leapi.git#pull/${env.CHANGE_ID}/head", "--strategy=docker", "--name=leapi-${PR_NUM}-builder", "-l pr=${PR_NUM}")
             } else {
               echo "Starting build from pull request ${PR_NUM}"
               openshift.selector("bc", "leapi-${PR_NUM}-builder").startBuild("--wait")
@@ -45,7 +45,7 @@ pipeline {
             // the image can only be used as an executable
             if ( !openshift.selector("bc", "leapi-${PR_NUM}").exists() ) {
               echo "Creating new application build config"
-              openshift.newBuild("alpine:3.8", "--source-image=leapi-${PR_NUM}-builder", "--allow-missing-imagestream-tags", "--name=leapi-${PR_NUM}", "--source-image-path=/go/bin/leapi:.", """--dockerfile='FROM alpine:3.8
+              openshift.newBuild("alpine:3.8", "--source-image=leapi-${PR_NUM}-builder", "--allow-missing-imagestream-tags", "--name=leapi-${PR_NUM}", "-l pr=${PR_NUM}", "--source-image-path=/go/bin/leapi:.", """--dockerfile='FROM alpine:3.8
               RUN mkdir -p /app
               COPY leapi /app/leapi
               ENTRYPOINT [\"/app/leapi\"]
@@ -83,7 +83,13 @@ pipeline {
             // if a deployment config does not exist for this pull request, create one
             if ( !openshift.selector("dc", "leapi-dev-${PR_NUM}").exists() ) {
               echo "Creating a new deployment config for pull request ${PR_NUM}"
-              openshift.newApp("leapi-${PR_NUM}:dev", "--name=leapi-dev-${PR_NUM}").narrow("dc").expose("--port=8000")
+              openshift.newApp(
+                "leapi-${PR_NUM}:dev openshift/postgresql:9.6",
+                "-l pr=${PR_NUM}",
+                "-e POSTGRESQL_DATABASE=testdb"
+              )
+
+              openshift.selector("dc", "leapi-dev-${PR_NUM}").expose("--port=8000")
             }
 
             echo "Waiting for deployment to dev..."
