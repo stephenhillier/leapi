@@ -8,7 +8,8 @@ import (
 )
 
 func TestHealthCheck(t *testing.T) {
-	handler := http.HandlerFunc(health)
+	api := &Server{nil, nil}
+	handler := http.HandlerFunc(api.health)
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
